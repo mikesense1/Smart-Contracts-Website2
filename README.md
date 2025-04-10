@@ -1,1 +1,694 @@
 # Smart-Contracts-Website2
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Contract Agreement Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.1/web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-xl font-bold text-indigo-600">ContractChain</div>
+            <div class="flex space-x-4">
+                <button id="connectWallet" class="bg-indigo-600 text-white px-4 py-2 rounded-md">Connect Wallet</button>
+                <span id="walletAddress" class="hidden py-2"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 mt-8">
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h1 class="text-2xl font-bold mb-4">Create New Agreement</h1>
+            
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">1. Agreement Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Agreement Title</label>
+                        <input type="text" id="agreementTitle" class="w-full border border-gray-300 rounded-md p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Agreement Type</label>
+                        <select id="agreementType" class="w-full border border-gray-300 rounded-md p-2">
+                            <option value="service">Service Agreement</option>
+                            <option value="delivery">Delivery Agreement</option>
+                            <option value="custom">Custom Agreement</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">2. Parties</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Party A (Your Wallet)</label>
+                        <input type="text" id="partyA" class="w-full border border-gray-300 rounded-md p-2" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Party B (Counterparty Wallet)</label>
+                        <input type="text" id="partyB" class="w-full border border-gray-300 rounded-md p-2">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">3. Agreement Terms</h2>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Terms and Conditions</label>
+                    <textarea id="agreementTerms" rows="5" class="w-full border border-gray-300 rounded-md p-2"></textarea>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">4. Payment Terms</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Amount (ETH)</label>
+                        <input type="number" id="paymentAmount" class="w-full border border-gray-300 rounded-md p-2" step="0.001">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Release Method</label>
+                        <select id="releaseMethod" class="w-full border border-gray-300 rounded-md p-2">
+                            <option value="partyB_confirm">Party B Confirmation</option>
+                            <option value="both_confirm">Both Parties Confirmation</option>
+                            <option value="oracle">Oracle Verification</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">5. Completion Verification</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Completion Criteria</label>
+                        <textarea id="completionCriteria" rows="3" class="w-full border border-gray-300 rounded-md p-2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="createContract" class="bg-indigo-600 text-white px-6 py-2 rounded-md">Create Contract</button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h1 class="text-2xl font-bold mb-4">My Agreements</h1>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Counterparty</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="agreementsList">
+                        <!-- Agreement list will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Agreement Details Modal -->
+    <div id="agreementModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold" id="modalTitle">Agreement Details</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div id="modalContent">
+                <!-- Agreement details will be populated dynamically -->
+            </div>
+            <div class="flex justify-end space-x-2 mt-6">
+                <button id="confirmCompletion" class="bg-green-500 text-white px-4 py-2 rounded-md hidden">Confirm Completion</button>
+                <button id="cancelAgreement" class="bg-red-500 text-white px-4 py-2 rounded-md hidden">Cancel Agreement</button>
+                <button id="closeModalBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smart Contract ABI (Application Binary Interface)
+        const contractABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "agreementId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "partyA",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "partyB",
+                        "type": "address"
+                    }
+                ],
+                "name": "AgreementCreated",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "agreementId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "AgreementCompleted",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_partyB",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "_title",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "_terms",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "_completionCriteria",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "_releaseMethod",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "createAgreement",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_agreementId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "confirmAgreement",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_agreementId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "confirmCompletion",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_agreementId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "getAgreement",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "address payable",
+                                "name": "partyA",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "address payable",
+                                "name": "partyB",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "title",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "terms",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "completionCriteria",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "paymentAmount",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "uint8",
+                                "name": "releaseMethod",
+                                "type": "uint8"
+                            },
+                            {
+                                "internalType": "bool",
+                                "name": "partyAConfirmed",
+                                "type": "bool"
+                            },
+                            {
+                                "internalType": "bool",
+                                "name": "partyBConfirmed",
+                                "type": "bool"
+                            },
+                            {
+                                "internalType": "uint8",
+                                "name": "status",
+                                "type": "uint8"
+                            }
+                        ],
+                        "internalType": "struct AgreementContract.Agreement",
+                        "name": "",
+                        "type": "tuple"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_address",
+                        "type": "address"
+                    }
+                ],
+                "name": "getAgreementsByAddress",
+                "outputs": [
+                    {
+                        "internalType": "uint256[]",
+                        "name": "",
+                        "type": "uint256[]"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // Smart Contract Address (This would be the deployed contract address)
+        const contractAddress = "0x1234567890123456789012345678901234567890"; // Placeholder
+
+        let web3;
+        let contract;
+        let userAccount;
+
+        // Initialize the application when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        // Initialize Web3 and contract instance
+        async function initializeApp() {
+            // Check if MetaMask is installed
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                
+                // Check if already connected
+                const accounts = await web3.eth.getAccounts();
+                if (accounts.length > 0) {
+                    userAccount = accounts[0];
+                    updateUIAfterConnection();
+                }
+            } else {
+                alert("Please install MetaMask to use this application!");
+            }
+        }
+
+        // Setup event listeners for all interactive elements
+        function setupEventListeners() {
+            // Connect wallet button
+            document.getElementById('connectWallet').addEventListener('click', connectWallet);
+            
+            // Create contract button
+            document.getElementById('createContract').addEventListener('click', createNewAgreement);
+            
+            // Modal close buttons
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            
+            // Action buttons in modal
+            document.getElementById('confirmCompletion').addEventListener('click', handleConfirmCompletion);
+            document.getElementById('cancelAgreement').addEventListener('click', handleCancelAgreement);
+        }
+
+        // Connect to MetaMask wallet
+        async function connectWallet() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                updateUIAfterConnection();
+                loadUserAgreements();
+            } catch (error) {
+                console.error("Error connecting to MetaMask:", error);
+                alert("Failed to connect to MetaMask. Please try again.");
+            }
+        }
+
+        // Update UI after wallet connection
+        function updateUIAfterConnection() {
+            document.getElementById('connectWallet').classList.add('hidden');
+            
+            const walletAddressEl = document.getElementById('walletAddress');
+            walletAddressEl.classList.remove('hidden');
+            walletAddressEl.textContent = `${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
+            
+            document.getElementById('partyA').value = userAccount;
+        }
+
+        // Create a new agreement
+        async function createNewAgreement() {
+            // Get all form values
+            const title = document.getElementById('agreementTitle').value;
+            const terms = document.getElementById('agreementTerms').value;
+            const partyB = document.getElementById('partyB').value;
+            const paymentAmount = web3.utils.toWei(document.getElementById('paymentAmount').value, 'ether');
+            const completionCriteria = document.getElementById('completionCriteria').value;
+            const releaseMethodSelect = document.getElementById('releaseMethod');
+            const releaseMethod = releaseMethodSelect.selectedIndex;
+            
+            // Validate inputs
+            if (!title || !terms || !partyB || !paymentAmount || !completionCriteria) {
+                alert("Please fill out all required fields.");
+                return;
+            }
+            
+            try {
+                // Create agreement on blockchain
+                await contract.methods.createAgreement(
+                    partyB,
+                    title,
+                    terms,
+                    completionCriteria,
+                    releaseMethod
+                ).send({ 
+                    from: userAccount,
+                    value: paymentAmount,
+                    gas: 3000000
+                });
+                
+                alert("Agreement created successfully!");
+                loadUserAgreements();
+            } catch (error) {
+                console.error("Error creating agreement:", error);
+                alert("Failed to create agreement. Please try again.");
+            }
+        }
+
+        // Load user's agreements
+        async function loadUserAgreements() {
+            try {
+                const agreementIds = await contract.methods.getAgreementsByAddress(userAccount).call({ from: userAccount });
+                const agreementsList = document.getElementById('agreementsList');
+                agreementsList.innerHTML = '';
+                
+                if (agreementIds.length === 0) {
+                    agreementsList.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center">No agreements found</td></tr>';
+                    return;
+                }
+                
+                for (const id of agreementIds) {
+                    const agreement = await contract.methods.getAgreement(id).call({ from: userAccount });
+                    
+                    // Create table row for each agreement
+                    const row = document.createElement('tr');
+                    
+                    // Define status text based on status code
+                    let statusText = "Unknown";
+                    let statusClass = "text-gray-500";
+                    
+                    switch (Number(agreement.status)) {
+                        case 0:
+                            statusText = "Pending";
+                            statusClass = "text-yellow-500";
+                            break;
+                        case 1:
+                            statusText = "Active";
+                            statusClass = "text-blue-500";
+                            break;
+                        case 2:
+                            statusText = "Completed";
+                            statusClass = "text-green-500";
+                            break;
+                        case 3:
+                            statusText = "Cancelled";
+                            statusClass = "text-red-500";
+                            break;
+                    }
+                    
+                    // Define counterparty based on user's role
+                    const counterparty = userAccount.toLowerCase() === agreement.partyA.toLowerCase() 
+                        ? agreement.partyB 
+                        : agreement.partyA;
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${agreement.title}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${counterparty.substring(0, 6)}...${counterparty.substring(38)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-opacity-10 ${statusClass} bg-${statusClass.split('-')[1]}-100">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button class="text-indigo-600 hover:text-indigo-900" onclick="viewAgreementDetails(${id})">View Details</button>
+                        </td>
+                    `;
+                    
+                    agreementsList.appendChild(row);
+                }
+            } catch (error) {
+                console.error("Error loading agreements:", error);
+                alert("Failed to load agreements. Please try again.");
+            }
+        }
+
+        // View agreement details in modal
+        async function viewAgreementDetails(agreementId) {
+            try {
+                const agreement = await contract.methods.getAgreement(agreementId).call({ from: userAccount });
+                
+                const modalContent = document.getElementById('modalContent');
+                const modalTitle = document.getElementById('modalTitle');
+                
+                modalTitle.textContent = agreement.title;
+                
+                // Format payment amount from wei to ETH
+                const paymentAmountEth = web3.utils.fromWei(agreement.paymentAmount, 'ether');
+                
+                // Define release method text
+                let releaseMethodText = "";
+                switch (Number(agreement.releaseMethod)) {
+                    case 0:
+                        releaseMethodText = "Party B Confirmation";
+                        break;
+                    case 1:
+                        releaseMethodText = "Both Parties Confirmation";
+                        break;
+                    case 2:
+                        releaseMethodText = "Oracle Verification";
+                        break;
+                }
+                
+                // Define status text
+                let statusText = "";
+                switch (Number(agreement.status)) {
+                    case 0:
+                        statusText = "Pending";
+                        break;
+                    case 1:
+                        statusText = "Active";
+                        break;
+                    case 2:
+                        statusText = "Completed";
+                        break;
+                    case 3:
+                        statusText = "Cancelled";
+                        break;
+                }
+                
+                // Determine if current user is Party A or Party B
+                const isPartyA = userAccount.toLowerCase() === agreement.partyA.toLowerCase();
+                
+                modalContent.innerHTML = `
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700">Parties</h3>
+                            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Party A:</span>
+                                    <p class="text-sm text-gray-900">${agreement.partyA}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Party B:</span>
+                                    <p class="text-sm text-gray-900">${agreement.partyB}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700">Terms and Conditions</h3>
+                            <p class="mt-2 text-sm text-gray-600 whitespace-pre-line">${agreement.terms}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700">Completion Criteria</h3>
+                            <p class="mt-2 text-sm text-gray-600 whitespace-pre-line">${agreement.completionCriteria}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-700">Payment Details</h3>
+                                <p class="mt-2 text-sm text-gray-600">${paymentAmountEth} ETH</p>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-700">Release Method</h3>
+                                <p class="mt-2 text-sm text-gray-600">${releaseMethodText}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700">Current Status</h3>
+                            <p class="mt-2 text-sm text-gray-600">${statusText}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700">Confirmation Status</h3>
+                            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Party A Confirmed:</span>
+                                    <p class="text-sm text-gray-900">${agreement.partyAConfirmed ? "Yes" : "No"}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Party B Confirmed:</span>
+                                    <p class="text-sm text-gray-900">${agreement.partyBConfirmed ? "Yes" : "No"}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Setup action buttons based on status and user role
+                const confirmCompletionBtn = document.getElementById('confirmCompletion');
+                const cancelAgreementBtn = document.getElementById('cancelAgreement');
+                
+                // Reset button visibility
+                confirmCompletionBtn.classList.add('hidden');
+                cancelAgreementBtn.classList.add('hidden');
+                
+                // Show appropriate buttons based on agreement status and user role
+                if (Number(agreement.status) === 1) { // Active agreement
+                    // Show confirmation button for Party B or both parties based on release method
+                    if ((Number(agreement.releaseMethod) === 0 && !isPartyA) || 
+                        (Number(agreement.releaseMethod) === 1)) {
+                        
+                        // Check if this party has already confirmed
+                        const hasConfirmed = isPartyA ? agreement.partyAConfirmed : agreement.partyBConfirmed;
+                        
+                        if (!hasConfirmed) {
+                            confirmCompletionBtn.classList.remove('hidden');
+                            confirmCompletionBtn.setAttribute('data-agreement-id', agreementId);
+                        }
+                    }
+                } else if (Number(agreement.status) === 0) { // Pending agreement
+                    // Show cancel button
+                    cancelAgreementBtn.classList.remove('hidden');
+                    cancelAgreementBtn.setAttribute('data-agreement-id', agreementId);
+                }
+                
+                // Show the modal
+                document.getElementById('agreementModal').classList.remove('hidden');
+            } catch (error) {
+                console.error("Error viewing agreement details:", error);
+                alert("Failed to load agreement details. Please try again.");
+            }
+        }
+
+        // Close the modal
+        function closeModal() {
+            document.getElementById('agreementModal').classList.add('hidden');
+        }
+
+        // Handle the confirm completion action
+        async function handleConfirmCompletion() {
+            const agreementId = this.getAttribute('data-agreement-id');
+            
+            try {
+                await contract.methods.confirmCompletion(agreementId).send({ from: userAccount });
+                alert("Completion confirmed successfully!");
+                closeModal();
+                loadUserAgreements();
+            } catch (error) {
+                console.error("Error confirming completion:", error);
+                alert("Failed to confirm completion. Please try again.");
+            }
+        }
+
+        // Handle the cancel agreement action
+        async function handleCancelAgreement() {
+            const agreementId = this.getAttribute('data-agreement-id');
+            
+            // This would require an additional contract function to handle cancellations
+            alert("Cancellation feature not implemented in this demo.");
+        }
+
+        // Make function accessible globally for the onclick handlers
+        window.viewAgreementDetails = viewAgreementDetails;
+    </script>
+</body>
+</html>
